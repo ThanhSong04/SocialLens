@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@shelby-protocol/ui/*": ["./packages/ui/src/*"],
+      "@shelby-protocol/ui/components/*": ["./packages/ui/src/components/*"],
+      "@shelby-protocol/ui/lib/*": ["./packages/ui/src/lib/*"]
     }
   },
   "include": [
