@@ -3,7 +3,7 @@ import { useState } from "react";
 import { getShelbyClient } from "@/utils/client";
 
 interface UseUploadFileReturn {
-  uploadFileToRcp: (file: File) => Promise<void>;
+  uploadFileToRcp: (file: File, uniqueBlobName: string) => Promise<void>;
   isUploading: boolean;
   error: string | null;
 }
@@ -13,7 +13,7 @@ export const useUploadFile = (): UseUploadFileReturn => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFileToRcp = async (file: File) => {
+  const uploadFileToRcp = async (file: File, uniqueBlobName: string) => {
     if (!account || !wallet) {
       throw new Error("Wallet not connected");
     }
@@ -24,7 +24,7 @@ export const useUploadFile = (): UseUploadFileReturn => {
     try {
       await getShelbyClient().rpc.putBlob({
         account: account.address,
-        blobName: file.name,
+        blobName: uniqueBlobName,
         blobData: new Uint8Array(await file.arrayBuffer()),
       });
     } catch (err) {

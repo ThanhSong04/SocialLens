@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Post } from '@/types'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -12,6 +12,17 @@ interface PostCardProps {
 export default function PostCard({ post }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.is_liked || false)
   const [likesCount, setLikesCount] = useState(post.likes_count || 0)
+  const [showTapHeart, setShowTapHeart] = useState(false)
+
+  // IG/FB clamp feed aspect ratio to avoid extremely tall/wide media taking over the viewport.
+  // Min: 4:5 (0.8) – Max: 1.91:1
+  const feedAspectRatio = useMemo(() => {
+    const w = post.media_width
+    const h = post.media_height
+    if (!w || !h || w <= 0 || h <= 0) return 1 // square fallback
+    const raw = w / h
+    return Math.min(1.91, Math.max(0.8, raw))
+  }, [post.media_width, post.media_height])
 
   const handleLike = async () => {
     try {
@@ -28,11 +39,19 @@ export default function PostCard({ post }: PostCardProps) {
     }
   }
 
+  const handleDoubleTap = () => {
+    if (!isLiked) {
+      void handleLike()
+    }
+    setShowTapHeart(true)
+    window.setTimeout(() => setShowTapHeart(false), 260)
+  }
+
   return (
-    <article className="bg-white rounded-lg shadow-md overflow-hidden">
+    <article className="glass-card overflow-hidden transition-all duration-300 ease-out max-w-[680px] mx-auto">
       {/* Header */}
       <div className="px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+        <div className="w-10 h-10 bg-surface-2/80 border border-border rounded-full flex items-center justify-center overflow-hidden">
           {post.user?.avatar_url ? (
             <img
               src={post.user.avatar_url}
@@ -40,7 +59,7 @@ export default function PostCard({ post }: PostCardProps) {
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
-            <span className="text-gray-600 text-sm">
+            <span className="text-sm text-muted">
               {(post.user?.display_name || post.user?.username || 'U')[0].toUpperCase()}
             </span>
           )}
@@ -51,41 +70,62 @@ export default function PostCard({ post }: PostCardProps) {
               {post.user?.display_name || post.user?.username || 'Unknown User'}
             </h3>
           </Link>
-          <p className="text-sm text-gray-500">{formatDate(post.created_at)}</p>
+          <p className="text-xs text-muted">{formatDate(post.created_at)}</p>
         </div>
       </div>
 
       {/* Media */}
       <Link href={`/post/${post.id}`}>
-        <div className="relative w-full aspect-square bg-black">
+        <div
+          className="relative w-full max-w-[680px] mx-auto bg-black/70 overflow-hidden"
+          style={{ aspectRatio: String(feedAspectRatio), maxHeight: '80vh' }}
+          onDoubleClick={handleDoubleTap}
+        >
           {post.file_type === 'image' ? (
             <img
               src={post.shelby_file_url}
               alt={post.caption || 'Post image'}
-              className="w-full h-full object-contain"
+              className="h-full w-full object-cover"
               loading="lazy"
+              decoding="async"
               onError={(e) => {
-                e.currentTarget.src = '/placeholder-image.png'
+                e.currentTarget.src = '/placeholder-image.svg'
               }}
             />
           ) : (
             <video
               src={post.shelby_file_url}
               controls
-              className="w-full h-full object-contain"
+              className="h-full w-full object-cover"
               preload="metadata"
             />
+          )}
+
+          {/* Double-tap heart micro interaction */}
+          {showTapHeart && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="animate-[tapHeart_260ms_ease-out_forwards] text-pink-400 drop-shadow-[0_0_30px_rgba(244,114,182,0.9)]">
+                <svg
+                  className="w-20 h-20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" />
+                </svg>
+              </div>
+            </div>
           )}
         </div>
       </Link>
 
       {/* Actions */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 space-y-2">
         <div className="flex items-center gap-4 mb-2">
           <button
             onClick={handleLike}
             className={`transition-colors ${
-              isLiked ? 'text-red-500' : 'text-gray-700 hover:text-red-500'
+              isLiked ? 'text-pink-400' : 'text-muted hover:text-pink-400'
             }`}
           >
             <svg
@@ -103,7 +143,7 @@ export default function PostCard({ post }: PostCardProps) {
             </svg>
           </button>
           <Link href={`/post/${post.id}`}>
-            <button className="text-gray-700 hover:text-blue-500 transition-colors">
+            <button className="text-muted hover:text-brand-strong transition-colors">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -123,25 +163,27 @@ export default function PostCard({ post }: PostCardProps) {
 
         {/* Likes count */}
         {likesCount > 0 && (
-          <p className="font-semibold text-sm mb-2">{likesCount} likes</p>
+          <p className="font-semibold text-xs tracking-wide text-muted-2">
+            {likesCount} likes
+          </p>
         )}
 
         {/* Caption */}
         {post.caption && (
-          <div className="mb-2">
+          <div className="mb-1 text-sm leading-snug">
             <Link href={`/profile/${post.user_id}`}>
               <span className="font-semibold hover:underline">
                 {post.user?.display_name || post.user?.username || 'Unknown User'}
               </span>
             </Link>
-            <span className="ml-2">{post.caption}</span>
+            <span className="ml-2 text-foreground/90">{post.caption}</span>
           </div>
         )}
 
         {/* Comments count */}
         {post.comments_count && post.comments_count > 0 && (
           <Link href={`/post/${post.id}`}>
-            <button className="text-gray-500 text-sm hover:text-gray-700">
+            <button className="text-[11px] text-muted hover:text-foreground transition-colors">
               View all {post.comments_count} comments
             </button>
           </Link>

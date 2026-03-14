@@ -1,83 +1,91 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getCurrentUser } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const session = await getSession()
+    const currentUserId = session?.userId
 
-    let query = supabase
+    // Fetch posts with user info, likes count, and comments count
+    const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         *,
-        user:users(*)
+        user:users!posts_user_id_fkey (
+          id,
+          wallet_address,
+          username,
+          display_name,
+          avatar_url
+        )
       `)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
-
-    const { data: posts, error } = await query
+      .limit(50)
 
     if (error) {
-      throw error
+      console.error('Error fetching posts:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch posts' },
+        { status: 500 }
+      )
     }
 
-    if (!posts || posts.length === 0) {
-      return NextResponse.json({ posts: [] })
-    }
-
-    // Get likes and comments counts
-    const postIds = posts.map(p => p.id)
+    // Fetch likes and comments counts for all posts
+    const postIds = posts?.map(p => p.id) || []
     
-    const [likesResult, commentsResult] = await Promise.all([
+    const [likesData, commentsData, userLikesData] = await Promise.all([
+      // Get likes count for each post
       supabase
         .from('likes')
-        .select('post_id, user_id')
+        .select('post_id')
         .in('post_id', postIds),
+      
+      // Get comments count for each post
       supabase
         .from('comments')
         .select('post_id')
         .in('post_id', postIds),
+      
+      // Get current user's likes if authenticated
+      currentUserId
+        ? supabase
+            .from('likes')
+            .select('post_id')
+            .eq('user_id', currentUserId)
+            .in('post_id', postIds)
+        : Promise.resolve({ data: [] })
     ])
 
-    const likesByPost = new Map<string, number>()
-    const commentsByPost = new Map<string, number>()
-    const userLikes = new Set<string>()
+    // Count likes and comments per post
+    const likesCount: Record<string, number> = {}
+    const commentsCount: Record<string, number> = {}
+    const userLikes = new Set(userLikesData.data?.map(l => l.post_id) || [])
 
-    likesResult.data?.forEach(like => {
-      likesByPost.set(like.post_id, (likesByPost.get(like.post_id) || 0) + 1)
+    likesData.data?.forEach(like => {
+      likesCount[like.post_id] = (likesCount[like.post_id] || 0) + 1
     })
 
-    commentsResult.data?.forEach(comment => {
-      commentsByPost.set(comment.post_id, (commentsByPost.get(comment.post_id) || 0) + 1)
+    commentsData.data?.forEach(comment => {
+      commentsCount[comment.post_id] = (commentsCount[comment.post_id] || 0) + 1
     })
 
-    // Get current user's likes
-    const currentUser = await getCurrentUser()
-    if (currentUser) {
-      likesResult.data
-        ?.filter(like => like.user_id === currentUser.id)
-        .forEach(like => userLikes.add(like.post_id))
-    }
-
-    const postsWithCounts = posts.map(post => ({
+    // Enrich posts with counts and is_liked status
+    const enrichedPosts = posts?.map(post => ({
       ...post,
+      likes_count: likesCount[post.id] || 0,
+      comments_count: commentsCount[post.id] || 0,
       is_liked: userLikes.has(post.id),
-      likes_count: likesByPost.get(post.id) || 0,
-      comments_count: commentsByPost.get(post.id) || 0,
     }))
 
-    return NextResponse.json({ posts: postsWithCounts })
-  } catch (error: any) {
-    console.error('Error fetching posts:', error)
+    return NextResponse.json({
+      posts: enrichedPosts || [],
+    })
+  } catch (error: unknown) {
+    console.error('Error in posts API:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch posts'
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch posts' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

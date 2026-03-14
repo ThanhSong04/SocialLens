@@ -1,10 +1,4 @@
 import {
-  Account,
-  Ed25519PrivateKey,
-  PrivateKey,
-  PrivateKeyVariants,
-} from "@aptos-labs/ts-sdk";
-import {
   type InputTransactionData,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
@@ -14,10 +8,14 @@ import {
   ShelbyBlobClient,
 } from "@shelby-protocol/sdk/browser";
 import { useCallback, useState } from "react";
-import { getAptosClient, getShelbyClient } from "@/utils/client";
+import { getAptosClient } from "@/utils/client";
 
 interface UseSubmitFileToChainReturn {
-  submitFileToChain: (commitment: BlobCommitments, file: File) => Promise<void>;
+  submitFileToChain: (
+    commitment: BlobCommitments,
+    file: File,
+    uniqueBlobName: string
+  ) => Promise<void>;
   isSubmitting: boolean;
   error: string | null;
 }
@@ -25,11 +23,10 @@ interface UseSubmitFileToChainReturn {
 export const useSubmitFileToChain = (): UseSubmitFileToChainReturn => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { account, wallet, signAndSubmitTransaction, signTransaction } =
-    useWallet();
+  const { account, wallet, signAndSubmitTransaction } = useWallet();
 
   const submitFileToChain = useCallback(
-    async (commitment: BlobCommitments, file: File) => {
+    async (commitment: BlobCommitments, file: File, uniqueBlobName: string) => {
       if (!account || !wallet) {
         throw new Error("Account and wallet are required");
       }
@@ -38,73 +35,54 @@ export const useSubmitFileToChain = (): UseSubmitFileToChainReturn => {
       setError(null);
 
       try {
+        // Use high-level API from SDK (recommended by Shelby docs)
+        const expirationMicros = Date.now() * 1000 + 30 * 24 * 60 * 60 * 1000000; // 30 days
+
         const payload = ShelbyBlobClient.createRegisterBlobPayload({
           account: account.address,
-          blobName: file.name,
+          blobName: uniqueBlobName,
           blobMerkleRoot: commitment.blob_merkle_root,
           numChunksets: expectedTotalChunksets(commitment.raw_data_size),
-          expirationMicros: (1000 * 60 * 60 * 24 * 30 + Date.now()) * 1000, // 30 days from now in microseconds
+          expirationMicros,
           blobSize: commitment.raw_data_size,
+          encoding: 0, // ClayCode_16Total_10Data_13Helper (default)
+          // Future: Add useSponsoredUsdVariant: true for USD sponsorship
         });
 
-        if (wallet.isAptosNativeWallet) {
-          const transaction: InputTransactionData = {
-            data: payload,
-          };
-          const transactionSubmitted =
-            await signAndSubmitTransaction(transaction);
+        // Wallet adapter handles transaction submission
+        const transaction: InputTransactionData = {
+          data: payload,
+          options: {
+            maxGasAmount: 200000, // Required for blob registration
+          },
+        };
 
-          await getAptosClient().waitForTransaction({
-            transactionHash: transactionSubmitted.hash,
-          });
-        } else {
-          // Create the sponsor account
-          const privateKey = new Ed25519PrivateKey(
-            PrivateKey.formatPrivateKey(
-              process.env.NEXT_PUBLIC_SPONSOR_PRIVATE_KEY as string,
-              PrivateKeyVariants.Ed25519,
-            ),
-          );
-          const sponsorAccount = Account.fromPrivateKey({ privateKey });
+        const transactionSubmitted = await signAndSubmitTransaction(transaction);
 
-          const rawTransaction =
-            await getShelbyClient().aptos.transaction.build.simple({
-              sender: account.address,
-              data: payload,
-              withFeePayer: true,
-            });
-
-          const walletSignedTransaction = await signTransaction({
-            transactionOrPayload: rawTransaction,
-          });
-
-          const sponsorAuthenticator =
-            getShelbyClient().aptos.transaction.signAsFeePayer({
-              signer: sponsorAccount,
-              transaction: rawTransaction,
-            });
-
-          const transactionSubmitted =
-            await getShelbyClient().aptos.transaction.submit.simple({
-              transaction: rawTransaction,
-              senderAuthenticator: walletSignedTransaction.authenticator,
-              feePayerAuthenticator: sponsorAuthenticator,
-            });
-
-          await getShelbyClient().aptos.waitForTransaction({
-            transactionHash: transactionSubmitted.hash,
-          });
-        }
+        // Wait for transaction confirmation
+        await getAptosClient().waitForTransaction({
+          transactionHash: transactionSubmitted.hash,
+        });
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred";
+        // Handle specific error cases
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        
+        if (errorMessage.includes("INSUFFICIENT_BALANCE")) {
+          const userFriendlyError = 
+            "Insufficient APT balance for transaction fees. " +
+            "Please fund your wallet with APT tokens from the Shelby faucet: " +
+            "https://faucet.shelby.xyz";
+          setError(userFriendlyError);
+          throw new Error(userFriendlyError);
+        }
+        
         setError(errorMessage);
         throw err;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [account, wallet, signAndSubmitTransaction, signTransaction],
+    [account, wallet, signAndSubmitTransaction],
   );
 
   return {

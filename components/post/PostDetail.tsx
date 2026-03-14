@@ -99,7 +99,7 @@ export default function PostDetail({ postId }: PostDetailProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-strong"></div>
       </div>
     )
   }
@@ -107,10 +107,10 @@ export default function PostDetail({ postId }: PostDetailProps) {
   if (!post) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Post not found</p>
+        <p className="text-muted">Post not found</p>
         <button
           onClick={() => router.push('/')}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className="mt-4 px-4 py-2 brand-gradient rounded-lg"
         >
           Go Home
         </button>
@@ -118,12 +118,19 @@ export default function PostDetail({ postId }: PostDetailProps) {
     )
   }
 
+  const detailAspectRatio = (() => {
+    const w = post.media_width
+    const h = post.media_height
+    if (!w || !h || w <= 0 || h <= 0) return 1
+    return w / h
+  })()
+
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      <div className="glass-card grid gap-0 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] overflow-hidden">
         {/* Header */}
-        <div className="px-4 py-3 flex items-center gap-3 border-b">
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-border/60">
+          <div className="w-10 h-10 bg-surface-2/80 border border-border rounded-full flex items-center justify-center overflow-hidden">
             {post.user?.avatar_url ? (
               <img
                 src={post.user.avatar_url}
@@ -131,7 +138,7 @@ export default function PostDetail({ postId }: PostDetailProps) {
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <span className="text-gray-600 text-sm">
+              <span className="text-sm text-muted">
                 {(post.user?.display_name || post.user?.username || 'U')[0].toUpperCase()}
               </span>
             )}
@@ -142,39 +149,43 @@ export default function PostDetail({ postId }: PostDetailProps) {
                 {post.user?.display_name || post.user?.username || 'Unknown User'}
               </h3>
             </Link>
-            <p className="text-sm text-gray-500">{formatDate(post.created_at)}</p>
+            <p className="text-sm text-muted">{formatDate(post.created_at)}</p>
           </div>
         </div>
 
         {/* Media */}
-        <div className="relative w-full bg-black">
+        <div
+          className="relative w-full bg-black/80 overflow-hidden"
+          style={{ aspectRatio: String(detailAspectRatio), maxHeight: '80vh' }}
+        >
           {post.file_type === 'image' ? (
             <img
               src={post.shelby_file_url}
               alt={post.caption || 'Post image'}
-              className="w-full max-h-[600px] object-contain mx-auto"
+              className="h-full w-full object-contain"
               loading="lazy"
+              decoding="async"
               onError={(e) => {
-                e.currentTarget.src = '/placeholder-image.png'
+                e.currentTarget.src = '/placeholder-image.svg'
               }}
             />
           ) : (
             <video
               src={post.shelby_file_url}
               controls
-              className="w-full max-h-[600px] object-contain mx-auto"
+              className="h-full w-full object-contain"
               preload="metadata"
             />
           )}
         </div>
 
         {/* Actions and Caption */}
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-4 mb-2">
+        <div className="px-4 py-4 flex flex-col gap-4 border-t border-border/60 md:border-t-0 md:border-l">
+          <div className="flex items-center gap-4">
             <button
               onClick={handleLike}
               className={`transition-colors ${
-                isLiked ? 'text-red-500' : 'text-gray-700 hover:text-red-500'
+                isLiked ? 'text-pink-400' : 'text-muted hover:text-pink-400'
               }`}
             >
               <svg
@@ -194,24 +205,26 @@ export default function PostDetail({ postId }: PostDetailProps) {
           </div>
 
           {likesCount > 0 && (
-            <p className="font-semibold text-sm mb-2">{likesCount} likes</p>
+            <p className="font-semibold text-xs tracking-wide text-muted-2">
+              {likesCount} likes
+            </p>
           )}
 
           {post.caption && (
-            <div className="mb-2">
+            <div className="mb-1 text-sm leading-snug">
               <Link href={`/profile/${post.user_id}`}>
                 <span className="font-semibold hover:underline">
                   {post.user?.display_name || post.user?.username || 'Unknown User'}
                 </span>
               </Link>
-              <span className="ml-2">{post.caption}</span>
+              <span className="ml-2 text-foreground/90">{post.caption}</span>
             </div>
           )}
 
           {/* Comments */}
-          <div className="mt-4 space-y-3">
+          <div className="mt-2 flex-1 space-y-3">
             {comments.length > 0 && (
-              <div className="space-y-2">
+              <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex gap-2">
                     <Link href={`/profile/${comment.user_id}`}>
@@ -219,26 +232,29 @@ export default function PostDetail({ postId }: PostDetailProps) {
                         {comment.user?.display_name || comment.user?.username || 'Unknown User'}
                       </span>
                     </Link>
-                    <span className="text-sm">{comment.content}</span>
+                    <span className="text-sm text-foreground/90">{comment.content}</span>
                   </div>
                 ))}
               </div>
             )}
 
             {/* Comment Form */}
-            <form onSubmit={handleSubmitComment} className="flex gap-2 pt-2 border-t">
+            <form
+              onSubmit={handleSubmitComment}
+              className="flex gap-2 pt-3 border-t border-border/60 sticky bottom-0 bg-surface/95 backdrop-blur"
+            >
               <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Add a comment..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-border/70 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent bg-surface text-sm"
                 disabled={submittingComment}
               />
               <button
                 type="submit"
                 disabled={!newComment.trim() || submittingComment}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gradient-to-r from-emerald-400 to-sky-400 text-slate-950 rounded-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-xs font-medium"
               >
                 {submittingComment ? 'Posting...' : 'Post'}
               </button>

@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
 
     // Parse form data
     const formData = await request.formData()
-    const file = formData.get('file') as File
     const caption = formData.get('caption') as string | null
     const shelbyFileId = formData.get('shelbyFileId') as string
     const shelbyFileUrl = formData.get('shelbyFileUrl') as string
@@ -53,10 +52,11 @@ export async function POST(request: NextRequest) {
       success: true,
       post,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Upload failed'
     return NextResponse.json(
-      { error: error.message || 'Upload failed' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

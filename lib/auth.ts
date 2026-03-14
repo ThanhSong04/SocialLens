@@ -17,7 +17,14 @@ export async function getSession(): Promise<Session | null> {
       return null
     }
 
-    const session: Session = JSON.parse(sessionCookie.value)
+    let raw = sessionCookie.value
+    try {
+      raw = decodeURIComponent(raw)
+    } catch {
+      // ignore
+    }
+
+    const session: Session = JSON.parse(raw)
 
     // Check if session is expired
     if (session.expiresAt < Date.now()) {

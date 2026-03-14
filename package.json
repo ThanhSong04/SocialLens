@@ -25,7 +25,7 @@
     "@aptos-labs/derived-wallet-solana": "^0.10.0",
     "@aptos-labs/ts-sdk": "^5.1.1",
     "@aptos-labs/wallet-adapter-react": "^8.1.0",
-    "@shelby-protocol/sdk": "latest",
+    "@shelby-protocol/sdk": "^0.2.4",
     "@shelby-protocol/ui": "file:./packages/ui",
     "@supabase/supabase-js": "^2.93.3",
     "clsx": "^2.1.1",

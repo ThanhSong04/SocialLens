@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { XChainWalletSelector } from '@shelby-protocol/ui/components/x-chain-wallet-selector'
@@ -8,44 +8,63 @@ import { XChainWalletSelector } from '@shelby-protocol/ui/components/x-chain-wal
 export default function LoginPage() {
   const { connected, account } = useWallet()
   const router = useRouter()
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   useEffect(() => {
-    if (connected && account) {
-      // Authenticate with backend when wallet connects
-      const authenticate = async () => {
+    const handleLogin = async () => {
+      if (connected && account && !isLoggingIn) {
+        setIsLoggingIn(true)
+        
         try {
+          // Call backend to create/get user and set proper session
           const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ walletAddress: account.address.toString() }),
+            body: JSON.stringify({
+              walletAddress: account.address.toString(),
+            }),
           })
 
-          if (response.ok) {
+          if (!response.ok) {
+            throw new Error('Login failed')
+          }
+
+          const data = await response.json()
+          
+          if (data.authenticated) {
             router.push('/')
           }
         } catch (error) {
-          console.error('Authentication error:', error)
+          console.error('Login error:', error)
+          setIsLoggingIn(false)
         }
       }
-      authenticate()
     }
-  }, [connected, account, router])
+
+    handleLogin()
+  }, [connected, account, router, isLoggingIn])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-2">Welcome</h1>
-        <p className="text-gray-600 text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="glass-card max-w-md w-full p-8">
+        <div className="h-1.5 w-14 rounded-full bg-brand mx-auto mb-6" />
+        <h1 className="text-3xl font-bold text-center mb-2 tracking-tight">Welcome</h1>
+        <p className="text-muted text-center mb-8">
           Connect your wallet to continue
         </p>
         <div className="flex justify-center">
           <XChainWalletSelector
             size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:border-blue-400"
+            className="brand-gradient"
           />
         </div>
+        {isLoggingIn && (
+          <p className="text-center text-xs text-muted mt-4">
+            Authenticating...
+          </p>
+        )}
       </div>
     </div>
   )

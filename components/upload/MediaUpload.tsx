@@ -80,6 +80,10 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
       // Determine file type
       const fileType = file.type.startsWith('image/') ? 'image' : 'video'
 
+      // Generate unique blob name to avoid conflicts (timestamp-originalname.ext)
+      const timestamp = Date.now()
+      const uniqueBlobName = `${timestamp}-${file.name}`
+
       // Step 1: Encode the file
       setUploadStage('Encoding file...')
       setUploadProgress(10)
@@ -88,19 +92,19 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
       // Step 2: Submit the file to the chain
       setUploadStage('Submitting transaction to chain...')
       setUploadProgress(30)
-      await submitFileToChain(commitments, file)
+      await submitFileToChain(commitments, file, uniqueBlobName)
 
       // Step 3: Upload the file to the RPC
       setUploadStage('Uploading file to Shelby RPC...')
       setUploadProgress(60)
-      await uploadFileToRcp(file)
+      await uploadFileToRcp(file, uniqueBlobName)
 
       // Step 4: Get the blob URL
       setUploadStage('Getting file URL...')
       setUploadProgress(80)
       const shelbyApiUrl = process.env.NEXT_PUBLIC_SHELBY_API_URL || 'https://api.shelbynet.shelby.xyz'
-      const fileUrl = `${shelbyApiUrl}/v1/blobs/${account.address.toString()}/${file.name}`
-      const fileId = `${account.address.toString()}/${file.name}`
+      const fileUrl = `${shelbyApiUrl}/v1/blobs/${account.address.toString()}/${uniqueBlobName}`
+      const fileId = `${account.address.toString()}/${uniqueBlobName}`
 
       // Step 5: Save metadata to Supabase
       setUploadStage('Saving post metadata...')
@@ -150,12 +154,17 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6">Create New Post</h2>
+    <div className="w-full max-w-2xl mx-auto p-6 md:p-7 glass-card">
+      <h2 className="text-xl md:text-2xl font-semibold mb-1 tracking-tight">
+        Create new post
+      </h2>
+      <p className="mb-6 text-xs text-muted uppercase tracking-[0.18em]">
+        Image · Video · Shelby blob
+      </p>
 
       {/* File Upload Area */}
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors mb-4"
+        className="border border-dashed border-border/70 rounded-2xl p-6 md:p-8 text-center cursor-pointer hover:border-brand-strong transition-colors mb-4 bg-surface-2/80"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
@@ -174,16 +183,16 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
               <img
                 src={preview}
                 alt="Preview"
-                className="max-h-96 mx-auto rounded-lg"
+                className="max-h-96 mx-auto rounded-xl"
               />
             ) : (
               <video
                 src={preview}
                 controls
-                className="max-h-96 mx-auto rounded-lg"
+                className="max-h-96 mx-auto rounded-xl"
               />
             )}
-            <p className="text-sm text-gray-600">{file?.name}</p>
+            <p className="text-xs text-muted-2">{file?.name}</p>
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -193,7 +202,7 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
                   fileInputRef.current.value = ''
                 }
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-xs text-red-400 hover:text-red-300"
             >
               Remove
             </button>
@@ -201,7 +210,7 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
         ) : (
           <div>
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12 text-muted-2"
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -213,10 +222,10 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
                 strokeLinejoin="round"
               />
             </svg>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-3 text-sm text-muted">
               Click to upload or drag and drop
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-[11px] text-muted-2 mt-1">
               PNG, JPG, GIF, MP4 up to 100MB
             </p>
           </div>
@@ -226,14 +235,14 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
       {/* Caption Input */}
       {file && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-medium text-muted mb-1 uppercase tracking-[0.16em]">
             Caption
           </label>
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Write a caption..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 border border-border/70 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent resize-none bg-surface text-sm"
             rows={4}
           />
         </div>
@@ -242,17 +251,17 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
       {/* Upload Progress */}
       {isUploading && (
         <div className="mb-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-xs text-muted mb-2">
             <span className="font-medium">Uploading...</span>
             <span className="font-semibold">{uploadProgress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+          <div className="w-full bg-white/5 rounded-full h-2.5 overflow-hidden">
             <div
-              className="bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+              className="bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-400 h-2.5 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[11px] text-muted mt-1">
             {uploadStage || 'Preparing upload...'}
           </p>
         </div>
@@ -260,8 +269,8 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
 
       {/* Wallet Connection Warning */}
       {!account && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
+        <div className="mb-4 p-4 bg-surface-2/80 border border-border/70 rounded-2xl">
+          <p className="text-xs text-muted">
             Please connect your wallet to upload files
           </p>
         </div>
@@ -272,7 +281,7 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
         <button
           onClick={handleUpload}
           disabled={isUploading || !account}
-          className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-emerald-400 to-sky-400 text-slate-950 rounded-xl hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium tracking-wide"
         >
           {isUploading ? 'Uploading...' : 'Upload Post'}
         </button>

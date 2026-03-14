@@ -88,8 +88,8 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        <p className="mt-4 text-gray-500">Loading profile...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-strong"></div>
+        <p className="mt-4 text-muted">Loading profile...</p>
       </div>
     )
   }
@@ -97,145 +97,193 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">User not found</p>
+        <p className="text-muted">User not found</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.display_name || user.username}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-gray-600 text-2xl">
-                  {(user.display_name || user.username || 'U')[0].toUpperCase()}
-                </span>
-              )}
+    <div className="max-w-5xl mx-auto px-4 pt-8 pb-24 space-y-8">
+      {/* Profile Header – neo glass with floating avatar */}
+      <section className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-surface/80 px-5 pt-10 pb-6 shadow-[0_32px_120px_rgba(15,23,42,0.9)] backdrop-blur-2xl">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_150%_at_0%_0%,rgba(56,189,248,0.45),transparent),radial-gradient(140%_180%_at_100%_100%,rgba(244,114,182,0.4),transparent)] opacity-50" />
+
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-end">
+          {/* Avatar floating */}
+          <div className="relative flex-shrink-0 md:-mt-16">
+            <div className="glow-ring relative inline-flex items-center justify-center rounded-full bg-slate-900/70 p-[3px]">
+              <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface-2/80 shadow-[0_22px_70px_rgba(15,23,42,0.95)]">
+                {user.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.avatar_url}
+                    alt={user.display_name || user.username}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl font-semibold text-slate-50">
+                    {(user.display_name || user.username || 'U')[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Profile Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-4">
-              <h1 className="text-2xl font-bold">
-                {user.display_name || user.username || 'Unknown User'}
-              </h1>
-              {!isOwnProfile && (
-                <button
-                  onClick={handleFollow}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                    isFollowing
-                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                >
-                  {isFollowing ? 'Following' : 'Follow'}
-                </button>
-              )}
-              {isOwnProfile && (
-                <Link
-                  href="/create"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Create Post
-                </Link>
-              )}
-            </div>
+          <div className="relative flex-1 space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-muted mb-1">
+                  Profile
+                </p>
+                <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                  {user.display_name || user.username || 'Unknown User'}
+                </h1>
+              </div>
 
-            {/* Stats */}
-            <div className="flex gap-6 mb-4">
-              <div>
-                <span className="font-semibold">{posts.length}</span>
-                <span className="text-gray-600 ml-1">posts</span>
-              </div>
-              <div>
-                <span className="font-semibold">{followersCount}</span>
-                <span className="text-gray-600 ml-1">followers</span>
-              </div>
-              <div>
-                <span className="font-semibold">{followingCount}</span>
-                <span className="text-gray-600 ml-1">following</span>
+              <div className="flex flex-wrap items-center gap-3">
+                {!isOwnProfile && (
+                  <button
+                    onClick={handleFollow}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 shadow-[0_18px_60px_rgba(16,185,129,0.6)] ${
+                      isFollowing
+                        ? 'bg-surface-2/80 text-foreground hover:bg-surface'
+                        : 'bg-gradient-to-r from-emerald-400 to-sky-400 text-slate-950 hover:brightness-110'
+                    }`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                )}
+                {isOwnProfile && (
+                  <Link
+                    href="/create"
+                    className="inline-flex items-center gap-2 rounded-full bg-surface-2/90 px-4 py-2 text-sm font-medium text-foreground shadow-[0_16px_60px_rgba(15,23,42,0.8)] transition hover:bg-surface"
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300">
+                      +
+                    </span>
+                    Create
+                  </Link>
+                )}
               </div>
             </div>
 
-            {/* Bio */}
-            {user.bio && (
-              <div className="mb-2">
-                <p className="font-semibold">{user.display_name || user.username}</p>
-                <p className="text-gray-700">{user.bio}</p>
-              </div>
-            )}
+            {/* Stats – pill group */}
+            <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-white/10 bg-black/10 px-3 py-2 text-xs backdrop-blur">
+              <span className="rounded-full bg-black/40 px-3 py-1 font-medium">
+                {posts.length} posts
+              </span>
+              <span className="rounded-full bg-black/40 px-3 py-1 font-medium">
+                {followersCount} followers
+              </span>
+              <span className="rounded-full bg-black/40 px-3 py-1 font-medium">
+                {followingCount} following
+              </span>
+              <span className="hidden md:inline-flex rounded-full bg-emerald-400/15 px-3 py-1 font-medium text-emerald-200">
+                Joined {formatDate(user.created_at)}
+              </span>
+            </div>
 
-            {/* Wallet Address */}
-            <p className="text-sm text-gray-500 font-mono">
-              {user.wallet_address.slice(0, 6)}...{user.wallet_address.slice(-4)}
-            </p>
+            {/* Bio as tag bubbles */}
+            <div className="space-y-3">
+              {user.bio && (
+                <p className="max-w-xl text-sm leading-relaxed text-slate-100">
+                  {user.bio}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 text-[11px] text-muted">
+                <span className="rounded-full bg-black/30 px-3 py-1 font-mono uppercase tracking-[0.18em]">
+                  {user.username}
+                </span>
+                <span className="rounded-full bg-black/30 px-3 py-1 font-mono">
+                  {user.wallet_address.slice(0, 6)}...
+                  {user.wallet_address.slice(-4)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Posts Grid */}
-      {posts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <Link key={post.id} href={`/post/${post.id}`}>
-              <div className="relative aspect-square bg-black rounded-lg overflow-hidden cursor-pointer group">
-                {post.file_type === 'image' ? (
-                  <img
-                    src={post.shelby_file_url}
-                    alt={post.caption || 'Post'}
-                    className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder-image.png'
-                    }}
-                  />
-                ) : (
-                  <div className="relative w-full h-full">
-                    <video
+      {/* Posts Grid – mosaic style */}
+      <section aria-label="Posts">
+        {posts.length > 0 ? (
+          <div className="grid auto-rows-[140px] grid-cols-2 gap-3 md:auto-rows-[180px] md:grid-cols-4">
+            {posts.map((post, index) => {
+              const spanClass =
+                index % 6 === 0
+                  ? 'md:col-span-2 md:row-span-2'
+                  : index % 6 === 3
+                  ? 'md:col-span-2 md:row-span-1'
+                  : 'md:col-span-1 md:row-span-1'
+
+              return (
+                <Link
+                  key={post.id}
+                  href={`/post/${post.id}`}
+                  className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-black/60 ${spanClass}`}
+                >
+                  {post.file_type === 'image' ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={post.shelby_file_url}
-                      className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+                      alt={post.caption || 'Post'}
+                      className="h-full w-full object-cover transition duration-300 ease-out group-hover:scale-[1.04] group-hover:brightness-110"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder-image.svg'
+                      }}
                     />
-                    <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                      VIDEO
+                  ) : (
+                    <div className="relative h-full w-full">
+                      <video
+                        src={post.shelby_file_url}
+                        className="h-full w-full object-cover opacity-90 transition duration-300 ease-out group-hover:opacity-100"
+                      />
+                      <div className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
+                        VIDEO
+                      </div>
                     </div>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-4 text-white">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  )}
+
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+
+                  <div className="pointer-events-none absolute inset-x-2 bottom-2 flex items-center justify-between text-[11px] text-slate-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-1">
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" />
                       </svg>
                       {post.likes_count || 0}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-1">
+                      <svg
+                        className="h-3 w-3"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path d="M8 12h.01M12 12h.01M16 12h.01" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72A7.963 7.963 0 0 1 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                       {post.comments_count || 0}
                     </span>
                   </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <p className="text-gray-500 text-lg">No posts yet</p>
-        </div>
-      )}
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="glass-card flex items-center justify-center py-14 text-center">
+            <p className="text-muted text-lg">No posts yet</p>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

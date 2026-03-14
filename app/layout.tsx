@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
 import { WalletProvider } from "@/components/WalletProvider";
 import { Toaster } from "@shelby-protocol/ui/components";
 
@@ -26,12 +26,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
+      <head>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(() => {
+  try {
+    var key = 'shelby-theme';
+    var stored = window.localStorage.getItem(key);
+    var theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+    var root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
+  } catch (e) {}
+})();`,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <WalletProvider>
-        <Navbar />
         {children}
           <Toaster />
         </WalletProvider>

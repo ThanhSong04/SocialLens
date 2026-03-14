@@ -17,6 +17,12 @@ export interface Post {
   shelby_file_id: string
   shelby_file_url: string
   file_type: 'image' | 'video'
+  /**
+   * Media intrinsic size (px). IG/FB always keep an intrinsic aspect-ratio to avoid stretching
+   * and to prevent layout shift while media is loading.
+   */
+  media_width?: number
+  media_height?: number
   caption?: string
   created_at: string
   updated_at: string

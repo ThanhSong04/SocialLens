@@ -41,17 +41,17 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 bg-background">
+    <div className="border border-border rounded-xl p-6 bg-background">
       {!account && (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted">
             Please connect your wallet to view blobs
           </p>
         </div>
       )}
       {account && blobs.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted">
             No blobs found for this account. Upload a file to get started!
           </p>
         </div>
@@ -60,10 +60,10 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
         {blobs.map((blob) => (
           <div
             key={blob.name}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="bg-surface rounded-lg shadow-sm border border-border overflow-hidden"
           >
             {/* Image Section */}
-            <div className="w-full h-48 bg-gray-100 dark:bg-gray-700 p-2">
+            <div className="w-full h-48 bg-surface-2 p-2">
               <div className="h-full relative">
                 {isImageFile(extractFileName(blob.name)) ? (
                   <Image
@@ -88,14 +88,14 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
                   />
                 ) : (
                   <div
-                    className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded"
+                    className="w-full h-full flex items-center justify-center bg-surface-2 rounded"
                     style={{
                       borderRadius: "4px",
                     }}
                   >
                     <div className="text-center p-4">
-                      <div className="text-gray-400 dark:text-gray-500 mb-2" />
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300 break-words">
+                      <div className="text-muted-2 mb-2" />
+                      <p className="text-sm font-medium text-foreground break-words">
                         {extractFileName(blob.name)}
                       </p>
                     </div>
@@ -106,16 +106,16 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
 
             {/* Content Section */}
             <div className="p-4 space-y-3">
-              <h3 className="font-semibold text-lg text-gray-900 dark:text-white truncate">
+              <h3 className="font-semibold text-lg text-foreground truncate">
                 {extractFileName(blob.name)}
               </h3>
 
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-muted">
                     Owner:
                   </span>
-                  <p className="font-mono text-xs bg-gray-50 dark:bg-gray-700 p-1 rounded mt-1 break-all">
+                  <p className="font-mono text-xs bg-surface-2 p-1 rounded mt-1 break-all">
                     {blob.owner.toString()}
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
                     }/v1/blobs/${blob.owner.toString()}/${extractFileName(
                       blob.name,
                     )}`}
-                    className="block text-blue-600 dark:text-blue-400 hover:underline text-xs mt-1 break-all"
+                    className="block text-brand-strong hover:underline text-xs mt-1 break-all"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
