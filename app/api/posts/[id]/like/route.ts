@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser()
@@ -15,7 +15,7 @@ export async function POST(
       )
     }
 
-    const { id: postId } = params
+    const { id: postId } = await params
 
     // Check if like already exists
     const { data: existingLike } = await supabase
@@ -53,7 +53,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser()
@@ -64,7 +64,7 @@ export async function DELETE(
       )
     }
 
-    const { id: postId } = params
+    const { id: postId } = await params
 
     const { error } = await supabase
       .from('likes')

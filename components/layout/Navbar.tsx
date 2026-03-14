@@ -24,7 +24,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold tracking-tight text-brand-strong">
-            Instagram
+            SocialLens
           </Link>
 
           {/* Navigation Links */}

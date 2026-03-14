@@ -5,7 +5,7 @@ import Profile from '@/components/profile/Profile'
 export default async function ProfilePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const session = await getSession()
 
@@ -13,5 +13,7 @@ export default async function ProfilePage({
     redirect('/login')
   }
 
-  return <Profile userId={params.id} currentUserId={session.userId} />
+  const { id } = await params
+
+  return <Profile userId={id} currentUserId={session.userId} />
 }

@@ -4,7 +4,7 @@ import { motion, type Transition } from "motion/react";
 import useMeasure from "react-use-measure";
 
 interface ExpandingContainerProps {
-  children: React.ReactNode;
+  children: any;
   className?: string;
   initialHeight?: number;
   transition?: Transition;

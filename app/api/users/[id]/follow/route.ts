@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser()
@@ -15,7 +15,7 @@ export async function GET(
       )
     }
 
-    const { id: followingId } = params
+    const { id: followingId } = await params
 
     const { data: follow } = await supabase
       .from('follows')
@@ -37,7 +37,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser()
@@ -48,7 +48,7 @@ export async function POST(
       )
     }
 
-    const { id: followingId } = params
+    const { id: followingId } = await params
 
     if (currentUser.id === followingId) {
       return NextResponse.json(
@@ -93,7 +93,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser()
@@ -104,7 +104,7 @@ export async function DELETE(
       )
     }
 
-    const { id: followingId } = params
+    const { id: followingId } = await params
 
     const { error } = await supabase
       .from('follows')

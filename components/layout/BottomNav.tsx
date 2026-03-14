@@ -152,7 +152,7 @@ export default function BottomNav() {
           return (
             <Link
               key={item.key}
-              href={item.href}
+              href={item.href as any}
               className={clsx(
                 'group flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 transition-all duration-200 ease-out',
                 active

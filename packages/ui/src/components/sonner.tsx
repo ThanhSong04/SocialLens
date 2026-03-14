@@ -5,9 +5,10 @@ import { Toaster as Sonner, type ToasterProps, toast } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
+  const SonnerToaster = Sonner as any;
 
   return (
-    <Sonner
+    <SonnerToaster
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       style={

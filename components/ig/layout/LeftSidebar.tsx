@@ -167,8 +167,41 @@ function NavRow(
     icon: React.ReactNode
     label: string
     active?: boolean
+    disabled?: boolean
+    comingSoon?: boolean
   }
 ) {
+  if (props.disabled || props.comingSoon) {
+    return (
+      <div
+        className={clsx(
+          'group relative flex items-center gap-0 rounded-2xl px-4 py-3 transition',
+          'text-muted-foreground opacity-60',
+        )}
+      >
+        <span className="inline-flex w-6 h-6 items-center justify-center">{props.icon}</span>
+
+        {/* inline label */}
+        <span className="ml-4 text-[15px] leading-none whitespace-nowrap font-medium">
+          {props.label}
+        </span>
+
+        {/* Coming soon tooltip - overlay on top */}
+        <span
+          className={clsx(
+            'absolute inset-0 flex items-center justify-center rounded-2xl z-10',
+            'bg-surface/95 backdrop-blur-sm border border-border/50',
+            'text-sm font-medium text-foreground',
+            'opacity-0 invisible transition-all duration-200',
+            'group-hover:opacity-100 group-hover:visible',
+          )}
+        >
+          Coming soon
+        </span>
+      </div>
+    )
+  }
+
   return (
     <Link
       href={props.href}
@@ -194,12 +227,10 @@ function NavRow(
       {/* tooltip: visible when sidebar collapsed */}
       <span
         className={clsx(
-          'hidden',
           'pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2',
           'rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-sm',
           'opacity-0 translate-x-1 transition duration-150',
           'group-hover/item:opacity-100 group-hover/item:translate-x-0',
-          // hide tooltip when sidebar expanded (hover/focus-within)
           'group-hover/sidebar:opacity-0 group-focus-within/sidebar:opacity-0',
         )}
       >
@@ -237,7 +268,7 @@ export default function LeftSidebar() {
     }
   }, [moreOpen])
 
-  const items: NavItem[] = [
+  const items: (NavItem & { disabled?: boolean; comingSoon?: boolean })[] = [
     {
       key: 'home',
       label: 'Home',
@@ -245,15 +276,6 @@ export default function LeftSidebar() {
       icon: <IconHome className="w-6 h-6" />,
       match: (p) => p === '/',
     },
-    // Các route dưới đây chưa được implement; dùng placeholder '#' để tránh lỗi route type
-    { key: 'search', label: 'Search', href: '#', icon: <IconSearch className="w-6 h-6" /> },
-    {
-      key: 'explore',
-      label: 'Explore',
-      href: '/explore',
-      icon: <IconExplore className="w-6 h-6" />,
-    },
-    { key: 'notifications', label: 'Notifications', href: '#', icon: <IconHeart className="w-6 h-6" /> },
     {
       key: 'create',
       label: 'Create',
@@ -261,11 +283,43 @@ export default function LeftSidebar() {
       icon: <IconPlus className="w-6 h-6" />,
       match: (p) => p.startsWith('/create'),
     },
-    { key: 'profile', label: 'Profile', href: '#', icon: (
-      <span className="w-7 h-7 rounded-full bg-brand/40 border border-border flex items-center justify-center text-[11px] font-semibold">
-        U
-      </span>
-    ) },
+    { 
+      key: 'search', 
+      label: 'Search', 
+      href: '#', 
+      icon: <IconSearch className="w-6 h-6" />,
+      disabled: true,
+      comingSoon: true,
+    },
+    {
+      key: 'explore',
+      label: 'Explore',
+      href: '/explore',
+      icon: <IconExplore className="w-6 h-6" />,
+      disabled: true,
+      comingSoon: true,
+    },
+    { 
+      key: 'notifications', 
+      label: 'Notifications', 
+      href: '#', 
+      icon: <IconHeart className="w-6 h-6" />,
+      disabled: true,
+      comingSoon: true,
+    },
+    
+    // { 
+    //   key: 'profile', 
+    //   label: 'Profile', 
+    //   href: '#', 
+    //   icon: (
+    //     <span className="w-7 h-7 rounded-full bg-brand/40 border border-border flex items-center justify-center text-[11px] font-semibold">
+    //       U
+    //     </span>
+    //   ),
+    //   disabled: true,
+    //   comingSoon: true,
+    // },
   ]
 
   return (
@@ -287,18 +341,18 @@ export default function LeftSidebar() {
             'group/item relative flex items-center rounded-2xl px-4 py-3',
             'hover:bg-surface-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand',
           )}
-          aria-label="Instagram"
+          aria-label="SocialLens"
         >
           <span className="inline-flex w-6 h-6 items-center justify-center">
             <IconInstagram className="w-6 h-6" />
           </span>
 
           <span className="ml-4 text-[15px] font-semibold tracking-tight whitespace-nowrap">
-            Instagram
+            SocialLens
           </span>
 
           <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground shadow-sm opacity-0 translate-x-1 transition duration-150 group-hover/item:opacity-100 group-hover/item:translate-x-0 group-hover/sidebar:opacity-0 group-focus-within/sidebar:opacity-0">
-            Instagram
+            SocialLens
           </span>
         </Link>
       </div>
@@ -314,6 +368,8 @@ export default function LeftSidebar() {
               icon={it.icon}
               label={it.label}
               active={active}
+              disabled={it.disabled}
+              comingSoon={it.comingSoon}
             />
           )
         })}

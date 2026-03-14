@@ -28,6 +28,29 @@ import { ChevronDown } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./button";
+
+// Cast Radix UI components to avoid React type mismatch
+const TabsComponent = Tabs as any;
+const TabsContentComponent = TabsContent as any;
+const TabsListComponent = TabsList as any;
+const TabsTriggerComponent = TabsTrigger as any;
+const ChevronDownIcon = ChevronDown as any;
+
+// Cast Aptos wallet components
+const WalletItemComponent = WalletItem as any;
+const AboutAptosConnectComp = AboutAptosConnect as any;
+const AboutAptosConnectTrigger = AboutAptosConnect.Trigger as any;
+const AptosPrivacyPolicyComp = AptosPrivacyPolicy as any;
+const AptosPrivacyPolicyDisclaimer = AptosPrivacyPolicy.Disclaimer as any;
+const AptosPrivacyPolicyLink = AptosPrivacyPolicy.Link as any;
+const AptosPrivacyPolicyPoweredBy = AptosPrivacyPolicy.PoweredBy as any;
+
+// Cast icon components
+const IconClipboardComp = IconClipboard as any;
+const IconPersonComp = IconPerson as any;
+const IconLogoutComp = IconLogout as any;
+const IconArrowLeftComp = IconArrowLeft as any;
+const IconArrowRightComp = IconArrowRight as any;
 import {
   Collapsible,
   CollapsibleContent,
@@ -91,7 +114,7 @@ export function XChainWalletSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={copyAddress} className="gap-2">
-          <IconClipboard className="h-4 w-4" /> Copy address
+          <IconClipboardComp className="h-4 w-4" /> Copy address
         </DropdownMenuItem>
         {wallet && isAptosConnectWallet(wallet) && (
           <DropdownMenuItem asChild>
@@ -101,13 +124,13 @@ export function XChainWalletSelector({
               rel="noopener noreferrer"
               className="flex gap-2"
             >
-              <IconPerson className="h-4 w-4" /> Account
+              <IconPersonComp className="h-4 w-4" /> Account
             </a>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={disconnect} className="gap-2">
-          <IconLogout className="h-4 w-4" /> Disconnect
+          <IconLogoutComp className="h-4 w-4" /> Disconnect
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -193,7 +216,7 @@ function ConnectWalletDialog({
 
   return (
     <DialogContent className="max-h-screen overflow-auto !max-w-sm">
-      <AboutAptosConnect renderEducationScreen={renderEducationScreen}>
+      <AboutAptosConnectComp renderEducationScreen={renderEducationScreen}>
         <DialogHeader>
           <DialogTitle className="flex flex-col text-center leading-snug">
             {hasAptosConnectWallets ? (
@@ -219,18 +242,18 @@ function ConnectWalletDialog({
             ))}
             <p className="flex gap-1 justify-center items-center text-muted-foreground text-sm">
               Learn more about{" "}
-              <AboutAptosConnect.Trigger className="flex gap-1 py-3 items-center text-foreground">
-                Aptos Connect <IconArrowRight className="size-4" />
-              </AboutAptosConnect.Trigger>
+              <AboutAptosConnectTrigger className="flex gap-1 py-3 items-center text-foreground">
+                Aptos Connect <IconArrowRightComp className="size-4" />
+              </AboutAptosConnectTrigger>
             </p>
-            <AptosPrivacyPolicy className="flex flex-col items-center py-1">
+            <AptosPrivacyPolicyComp className="flex flex-col items-center py-1">
               <p className="text-xs leading-5">
-                <AptosPrivacyPolicy.Disclaimer />{" "}
-                <AptosPrivacyPolicy.Link className="text-muted-foreground underline underline-offset-4" />
+                <AptosPrivacyPolicyDisclaimer /> {" "}
+                <AptosPrivacyPolicyLink className="text-muted-foreground underline underline-offset-4" />
                 <span className="text-muted-foreground">.</span>
               </p>
-              <AptosPrivacyPolicy.PoweredBy className="flex gap-1.5 items-center text-xs leading-5 text-muted-foreground" />
-            </AptosPrivacyPolicy>
+              <AptosPrivacyPolicyPoweredBy className="flex gap-1.5 items-center text-xs leading-5 text-muted-foreground" />
+            </AptosPrivacyPolicyComp>
             <div className="flex items-center gap-3 pt-4 text-muted-foreground">
               <div className="h-px w-full bg-secondary" />
               Or
@@ -242,13 +265,13 @@ function ConnectWalletDialog({
         <div className="flex flex-col gap-3 pt-3">
           {/* Handle Aptos wallets */}
           <ExpandingContainer>
-            <Tabs defaultValue="aptos">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="aptos">Aptos</TabsTrigger>
-                <TabsTrigger value="solana">Solana</TabsTrigger>
-                <TabsTrigger value="ethereum">Ethereum</TabsTrigger>
-              </TabsList>
-              <TabsContent value="aptos">
+            <TabsComponent defaultValue="aptos">
+              <TabsListComponent className="grid w-full grid-cols-3">
+                <TabsTriggerComponent value="aptos">Aptos</TabsTriggerComponent>
+                <TabsTriggerComponent value="solana">Solana</TabsTriggerComponent>
+                <TabsTriggerComponent value="ethereum">Ethereum</TabsTriggerComponent>
+              </TabsListComponent>
+              <TabsContentComponent value="aptos">
                 {aptosWallets.map((wallet) => (
                   <WalletRow
                     key={wallet.name}
@@ -260,7 +283,7 @@ function ConnectWalletDialog({
                   <Collapsible className="flex flex-col gap-3 pt-3">
                     <CollapsibleTrigger asChild>
                       <Button size="sm" variant="ghost" className="gap-2">
-                        More wallets <ChevronDown />
+                        More wallets <ChevronDownIcon />
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="flex flex-col gap-3">
@@ -274,9 +297,9 @@ function ConnectWalletDialog({
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </TabsContent>
+              </TabsContentComponent>
               {/* Handle Solana wallets */}
-              <TabsContent value="solana">
+              <TabsContentComponent value="solana">
                 {solanaWallets.map((wallet) => (
                   <WalletRow
                     key={wallet.name}
@@ -288,7 +311,7 @@ function ConnectWalletDialog({
                   <Collapsible className="flex flex-col gap-3 pt-3">
                     <CollapsibleTrigger asChild>
                       <Button size="sm" variant="ghost" className="gap-2">
-                        More wallets <ChevronDown />
+                        More wallets <ChevronDownIcon />
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="flex flex-col gap-3">
@@ -302,9 +325,9 @@ function ConnectWalletDialog({
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </TabsContent>
+              </TabsContentComponent>
               {/* Handle Ethereum wallets */}
-              <TabsContent value="ethereum">
+              <TabsContentComponent value="ethereum">
                 {evmWallets.map((wallet) => (
                   <WalletRow
                     key={wallet.name}
@@ -316,7 +339,7 @@ function ConnectWalletDialog({
                   <Collapsible className="flex flex-col gap-3 pt-3">
                     <CollapsibleTrigger asChild>
                       <Button size="sm" variant="ghost" className="gap-2">
-                        More wallets <ChevronDown />
+                        More wallets <ChevronDownIcon />
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="flex flex-col gap-3">
@@ -330,11 +353,11 @@ function ConnectWalletDialog({
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </TabsContent>
-            </Tabs>
+              </TabsContentComponent>
+            </TabsComponent>
           </ExpandingContainer>
         </div>
-      </AboutAptosConnect>
+      </AboutAptosConnectComp>
     </DialogContent>
   );
 }
@@ -345,50 +368,63 @@ interface WalletRowProps {
 }
 
 function WalletRow({ wallet, onConnect }: WalletRowProps) {
+  const WalletIcon = WalletItem.Icon as any;
+  const WalletName = WalletItem.Name as any;
+  const WalletConnectButton = WalletItem.ConnectButton as any;
+  const WalletInstallLink = WalletItem.InstallLink as any;
+  
   return (
-    <WalletItem
+    <WalletItemComponent
       wallet={wallet}
       onConnect={onConnect}
       className="flex items-center justify-between px-4 py-3 gap-4 border rounded-sm"
     >
       <div className="flex items-center gap-4">
-        <WalletItem.Icon className="h-6 w-6" />
-        <WalletItem.Name className="text-base font-normal" />
+        <WalletIcon className="h-6 w-6" />
+        <WalletName className="text-base font-normal" />
       </div>
       {isInstallRequired(wallet) ? (
         <Button size="sm" variant="ghost" asChild>
-          <WalletItem.InstallLink />
+          <WalletInstallLink />
         </Button>
       ) : (
-        <WalletItem.ConnectButton asChild>
+        <WalletConnectButton asChild>
           <Button size="sm" variant="secondary">
             Connect
           </Button>
-        </WalletItem.ConnectButton>
+        </WalletConnectButton>
       )}
-    </WalletItem>
+    </WalletItemComponent>
   );
 }
 
 function AptosConnectWalletRow({ wallet, onConnect }: WalletRowProps) {
+  const WalletIcon = WalletItem.Icon as any;
+  const WalletName = WalletItem.Name as any;
+  const WalletConnectButton = WalletItem.ConnectButton as any;
+  
   return (
-    <WalletItem wallet={wallet} onConnect={onConnect}>
-      <WalletItem.ConnectButton asChild>
+    <WalletItemComponent wallet={wallet} onConnect={onConnect}>
+      <WalletConnectButton asChild>
         <Button size="lg" variant="secondary" className="w-full gap-4">
-          <WalletItem.Icon className="h-5 w-5" />
-          <WalletItem.Name className="text-base font-normal" />
+          <WalletIcon className="h-5 w-5" />
+          <WalletName className="text-base font-normal" />
         </Button>
-      </WalletItem.ConnectButton>
-    </WalletItem>
+      </WalletConnectButton>
+    </WalletItemComponent>
   );
 }
 
 function renderEducationScreen(screen: AboutAptosConnectEducationScreen) {
+  const Graphic = screen.Graphic as any;
+  const Title = screen.Title as any;
+  const Description = screen.Description as any;
+  
   return (
     <>
       <DialogHeader className="grid grid-cols-[1fr_4fr_1fr] items-center space-y-0">
         <Button variant="ghost" size="icon" onClick={screen.cancel}>
-          <IconArrowLeft />
+          <IconArrowLeftComp />
         </Button>
         <DialogTitle className="leading-snug text-base text-center">
           About Aptos Connect
@@ -396,11 +432,11 @@ function renderEducationScreen(screen: AboutAptosConnectEducationScreen) {
       </DialogHeader>
 
       <div className="flex h-[162px] pb-3 items-end justify-center">
-        <screen.Graphic />
+        <Graphic />
       </div>
       <div className="flex flex-col gap-2 text-center pb-4">
-        <screen.Title className="text-xl" />
-        <screen.Description className="text-sm text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a]:text-foreground" />
+        <Title className="text-xl" />
+        <Description className="text-sm text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a]:text-foreground" />
       </div>
 
       <div className="grid grid-cols-3 items-center">
@@ -413,12 +449,15 @@ function renderEducationScreen(screen: AboutAptosConnectEducationScreen) {
           Back
         </Button>
         <div className="flex items-center gap-2 place-self-center">
-          {screen.screenIndicators.map((ScreenIndicator, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: ignore
-            <ScreenIndicator key={i} className="py-4">
-              <div className="h-0.5 w-6 transition-colors bg-muted [[data-active]>&]:bg-foreground" />
-            </ScreenIndicator>
-          ))}
+          {screen.screenIndicators.map((ScreenIndicator, i) => {
+            const Indicator = ScreenIndicator as any;
+            return (
+              // biome-ignore lint/suspicious/noArrayIndexKey: ignore
+              <Indicator key={i} className="py-4">
+                <div className="h-0.5 w-6 transition-colors bg-muted [[data-active]>&]:bg-foreground" />
+              </Indicator>
+            );
+          })}
         </div>
         <Button
           size="sm"
@@ -427,7 +466,7 @@ function renderEducationScreen(screen: AboutAptosConnectEducationScreen) {
           className="gap-2 justify-self-end"
         >
           {screen.screenIndex === screen.totalScreens - 1 ? "Finish" : "Next"}
-          <IconArrowRight className="size-4" />
+          <IconArrowRightComp className="size-4" />
         </Button>
       </div>
     </>
