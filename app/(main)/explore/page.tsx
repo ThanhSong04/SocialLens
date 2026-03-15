@@ -1,14 +1,7 @@
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
 import ExploreGrid from '@/components/post/ExploreGrid'
 
 export default async function ExplorePage() {
-  const session = await getSession()
-
-  if (!session?.authenticated) {
-    redirect('/login')
-  }
-
+  // Public page - no auth required
   return (
     <div className="min-h-screen relative">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(900px_circle_at_10%_-10%,rgba(56,189,248,0.3),transparent_60%),radial-gradient(900px_circle_at_90%_110%,rgba(244,114,182,0.35),transparent_55%)]" />

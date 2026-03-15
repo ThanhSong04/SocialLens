@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { XChainWalletSelector } from '@shelby-protocol/ui/components/x-chain-wallet-selector'
 
-export default function LoginPage() {
+function LoginContent() {
   const { connected, account } = useWallet()
-  const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   useEffect(() => {
@@ -34,7 +34,9 @@ export default function LoginPage() {
           const data = await response.json()
           
           if (data.authenticated) {
-            router.push('/')
+            // Redirect to the page user was trying to access, or home
+            const redirectTo = searchParams.get('redirect') || '/'
+            window.location.href = redirectTo
           }
         } catch (error) {
           console.error('Login error:', error)
@@ -44,7 +46,7 @@ export default function LoginPage() {
     }
 
     handleLogin()
-  }, [connected, account, router, isLoggingIn])
+  }, [connected, account, isLoggingIn, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -67,5 +69,17 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-strong"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

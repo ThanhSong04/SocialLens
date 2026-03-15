@@ -30,6 +30,12 @@ export default function PostCard({ post }: PostCardProps) {
         method: isLiked ? 'DELETE' : 'POST',
       })
 
+      if (response.status === 401) {
+        // Not logged in - redirect to login
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
+        return
+      }
+
       if (response.ok) {
         setIsLiked(!isLiked)
         setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
@@ -142,7 +148,7 @@ export default function PostCard({ post }: PostCardProps) {
               />
             </svg>
           </button>
-          <Link href={`/post/${post.id}`}>
+          <Link href={`/post/${post.id}`} className='[display:inherit] '>
             <button className="text-muted hover:text-brand-strong transition-colors">
               <svg
                 className="w-6 h-6"
@@ -181,13 +187,13 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Comments count */}
-        {post.comments_count && post.comments_count > 0 && (
+        {/* {post.comments_count && post.comments_count > 0 && (
           <Link href={`/post/${post.id}`}>
             <button className="text-[11px] text-muted hover:text-foreground transition-colors">
               View all {post.comments_count} comments
             </button>
           </Link>
-        )}
+        )} */}
       </div>
     </article>
   )

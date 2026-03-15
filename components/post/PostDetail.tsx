@@ -61,6 +61,12 @@ export default function PostDetail({ postId }: PostDetailProps) {
         method: isLiked ? 'DELETE' : 'POST',
       })
 
+      if (response.status === 401) {
+        // Not logged in - redirect to login
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
+        return
+      }
+
       if (response.ok) {
         setIsLiked(!isLiked)
         setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
@@ -83,6 +89,12 @@ export default function PostDetail({ postId }: PostDetailProps) {
         },
         body: JSON.stringify({ content: newComment }),
       })
+
+      if (response.status === 401) {
+        // Not logged in - redirect to login
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
+        return
+      }
 
       if (response.ok) {
         const data = await response.json()

@@ -6,12 +6,27 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/auth/login']
+  const publicRoutes = [
+    '/login',
+    '/api/auth/login',
+    '/',  // Homepage/feed
+    '/explore',
+    '/post',  // View post detail
+    '/profile',  // View profile
+    '/story',  // View story
+    '/api/posts',  // Get posts API
+    '/api/users',  // Get user info API
+  ]
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
+  // Protected routes that require authentication
+  const protectedRoutes = ['/create']
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
   // If accessing protected route without session, redirect to login
-  if (!isPublicRoute && !session) {
+  if (isProtectedRoute && !session) {
     const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
 

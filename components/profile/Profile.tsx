@@ -8,7 +8,7 @@ import Link from 'next/link'
 
 interface ProfileProps {
   userId: string
-  currentUserId: string
+  currentUserId: string | null
 }
 
 export default function Profile({ userId, currentUserId }: ProfileProps) {
@@ -18,13 +18,16 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const isOwnProfile = userId === currentUserId
+  const isOwnProfile = currentUserId !== null && userId === currentUserId
+  const isLoggedIn = currentUserId !== null
 
   useEffect(() => {
     fetchProfile()
     fetchPosts()
-    fetchFollowStatus()
-  }, [userId])
+    if (isLoggedIn && !isOwnProfile) {
+      fetchFollowStatus()
+    }
+  }, [userId, isLoggedIn])
 
   const fetchProfile = async () => {
     try {
@@ -57,8 +60,6 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
   }
 
   const fetchFollowStatus = async () => {
-    if (isOwnProfile) return
-
     try {
       const response = await fetch(`/api/users/${userId}/follow`)
       if (response.ok) {
@@ -71,6 +72,12 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
   }
 
   const handleFollow = async () => {
+    if (!isLoggedIn) {
+      // Redirect to login if not logged in
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
+      return
+    }
+
     try {
       const response = await fetch(`/api/users/${userId}/follow`, {
         method: isFollowing ? 'DELETE' : 'POST',
@@ -142,7 +149,7 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                {!isOwnProfile && (
+                {isLoggedIn && !isOwnProfile && (
                   <button
                     onClick={handleFollow}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 shadow-[0_18px_60px_rgba(16,185,129,0.6)] ${
@@ -154,6 +161,15 @@ export default function Profile({ userId, currentUserId }: ProfileProps) {
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                     {isFollowing ? 'Following' : 'Follow'}
                   </button>
+                )}
+                {!isLoggedIn && !isOwnProfile && (
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-sky-400 text-slate-950 px-4 py-2 text-sm font-medium transition-all duration-200 shadow-[0_18px_60px_rgba(16,185,129,0.6)] hover:brightness-110"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                    Follow
+                  </Link>
                 )}
                 {isOwnProfile && (
                   <Link
