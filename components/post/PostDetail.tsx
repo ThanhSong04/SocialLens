@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Post, Comment } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -62,14 +62,13 @@ export default function PostDetail({ postId }: PostDetailProps) {
       })
 
       if (response.status === 401) {
-        // Not logged in - redirect to login
         window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
         return
       }
 
       if (response.ok) {
         setIsLiked(!isLiked)
-        setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
+        setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1))
       }
     } catch (error) {
       console.error('Error toggling like:', error)
@@ -91,14 +90,13 @@ export default function PostDetail({ postId }: PostDetailProps) {
       })
 
       if (response.status === 401) {
-        // Not logged in - redirect to login
         window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
         return
       }
 
       if (response.ok) {
         const data = await response.json()
-        setComments(prev => [...prev, data.comment])
+        setComments((prev) => [...prev, data.comment])
         setNewComment('')
       }
     } catch (error) {
@@ -108,172 +106,170 @@ export default function PostDetail({ postId }: PostDetailProps) {
     }
   }
 
+  const detailAspectRatio = useMemo(() => {
+    if (!post) return 1
+    const w = post.media_width
+    const h = post.media_height
+    if (!w || !h || w <= 0 || h <= 0) return 1
+    return w / h
+  }, [post])
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-strong"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-strong" />
       </div>
     )
   }
 
   if (!post) {
     return (
-      <div className="text-center py-12">
+      <div className="py-16 text-center">
         <p className="text-muted">Post not found</p>
-        <button
-          onClick={() => router.push('/')}
-          className="mt-4 px-4 py-2 brand-gradient rounded-lg"
-        >
+        <button onClick={() => router.push('/')} className="mt-4 rounded-lg px-4 py-2 brand-gradient">
           Go Home
         </button>
       </div>
     )
   }
 
-  const detailAspectRatio = (() => {
-    const w = post.media_width
-    const h = post.media_height
-    if (!w || !h || w <= 0 || h <= 0) return 1
-    return w / h
-  })()
-
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
-      <div className="glass-card grid gap-0 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 flex items-center gap-3 border-b border-border/60">
-          <div className="w-10 h-10 bg-surface-2/80 border border-border rounded-full flex items-center justify-center overflow-hidden">
-            {post.user?.avatar_url ? (
+    <section className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-10">
+      <div className="mb-4 flex items-center justify-between md:mb-6">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-muted transition-colors hover:text-foreground"
+        >
+          <span aria-hidden="true">←</span>
+          Back
+        </button>
+        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-2">Post detail</p>
+      </div>
+
+      <article className="glass-card overflow-hidden border border-border/70 md:grid md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="bg-black/85">
+          <div className="relative w-full" style={{ aspectRatio: String(detailAspectRatio), maxHeight: '82vh' }}>
+            {post.file_type === 'image' ? (
               <img
-                src={post.user.avatar_url}
-                alt={post.user.display_name || post.user.username}
-                className="w-full h-full rounded-full object-cover"
+                src={post.shelby_file_url}
+                alt={post.caption || 'Post image'}
+                className="h-full w-full object-contain"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder-image.svg'
+                }}
               />
             ) : (
-              <span className="text-sm text-muted">
-                {(post.user?.display_name || post.user?.username || 'U')[0].toUpperCase()}
-              </span>
+              <video
+                src={post.shelby_file_url}
+                controls
+                className="h-full w-full object-contain"
+                preload="metadata"
+              />
             )}
           </div>
-          <div className="flex-1">
-            <Link href={`/profile/${post.user_id}`}>
-              <h3 className="font-semibold hover:underline">
-                {post.user?.display_name || post.user?.username || 'Unknown User'}
-              </h3>
-            </Link>
-            <p className="text-sm text-muted">{formatDate(post.created_at)}</p>
-          </div>
         </div>
 
-        {/* Media */}
-        <div
-          className="relative w-full bg-black/80 overflow-hidden"
-          style={{ aspectRatio: String(detailAspectRatio), maxHeight: '80vh' }}
-        >
-          {post.file_type === 'image' ? (
-            <img
-              src={post.shelby_file_url}
-              alt={post.caption || 'Post image'}
-              className="h-full w-full object-contain"
-              loading="lazy"
-              decoding="async"
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder-image.svg'
-              }}
-            />
-          ) : (
-            <video
-              src={post.shelby_file_url}
-              controls
-              className="h-full w-full object-contain"
-              preload="metadata"
-            />
-          )}
-        </div>
-
-        {/* Actions and Caption */}
-        <div className="px-4 py-4 flex flex-col gap-4 border-t border-border/60 md:border-t-0 md:border-l">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLike}
-              className={`transition-colors ${
-                isLiked ? 'text-pink-400' : 'text-muted hover:text-pink-400'
-              }`}
-            >
-              <svg
-                className="w-6 h-6"
-                fill={isLiked ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        <div className="flex min-h-[620px] flex-col bg-surface/80 backdrop-blur-xl">
+          <header className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-2/80">
+              {post.user?.avatar_url ? (
+                <img
+                  src={post.user.avatar_url}
+                  alt={post.user.display_name || post.user.username}
+                  className="h-full w-full rounded-full object-cover"
                 />
-              </svg>
-            </button>
+              ) : (
+                <span className="text-sm text-muted">
+                  {(post.user?.display_name || post.user?.username || 'U')[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <Link href={`/profile/${post.user_id}`} className="block truncate font-semibold hover:underline">
+                {post.user?.display_name || post.user?.username || 'Unknown User'}
+              </Link>
+              <p className="text-xs text-muted">{formatDate(post.created_at)}</p>
+            </div>
+          </header>
+
+          <div className="space-y-3 border-b border-border/60 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLike}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+                  isLiked
+                    ? 'border-pink-400/40 bg-pink-400/10 text-pink-400'
+                    : 'border-border text-muted hover:border-pink-400/40 hover:text-pink-400'
+                }`}
+                aria-label={isLiked ? 'Unlike post' : 'Like post'}
+              >
+                <svg className="h-5 w-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
+                </svg>
+              </button>
+
+              <div>
+                <p className="text-sm font-semibold">{likesCount} likes</p>
+                <p className="text-xs text-muted">{comments.length} comments</p>
+              </div>
+            </div>
+
+            {post.caption && (
+              <p className="text-sm leading-relaxed text-foreground/90">
+                <Link href={`/profile/${post.user_id}`} className="mr-2 font-semibold hover:underline">
+                  {post.user?.display_name || post.user?.username || 'Unknown User'}
+                </Link>
+                {post.caption}
+              </p>
+            )}
           </div>
 
-          {likesCount > 0 && (
-            <p className="font-semibold text-xs tracking-wide text-muted-2">
-              {likesCount} likes
-            </p>
-          )}
-
-          {post.caption && (
-            <div className="mb-1 text-sm leading-snug">
-              <Link href={`/profile/${post.user_id}`}>
-                <span className="font-semibold hover:underline">
-                  {post.user?.display_name || post.user?.username || 'Unknown User'}
-                </span>
-              </Link>
-              <span className="ml-2 text-foreground/90">{post.caption}</span>
-            </div>
-          )}
-
-          {/* Comments */}
-          <div className="mt-2 flex-1 space-y-3">
-            {comments.length > 0 && (
-              <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-2">
-                    <Link href={`/profile/${comment.user_id}`}>
-                      <span className="font-semibold hover:underline text-sm">
-                        {comment.user?.display_name || comment.user?.username || 'Unknown User'}
-                      </span>
-                    </Link>
-                    <span className="text-sm text-foreground/90">{comment.content}</span>
-                  </div>
-                ))}
+          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            {comments.length === 0 ? (
+              <div className="flex h-full min-h-24 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-surface-2/40">
+                <p className="text-sm text-muted">No comments yet. Be the first to share your thoughts.</p>
               </div>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex gap-2 text-sm">
+                  <Link href={`/profile/${comment.user_id}`} className="shrink-0 font-semibold hover:underline">
+                    {comment.user?.display_name || comment.user?.username || 'Unknown User'}
+                  </Link>
+                  <p className="break-words text-foreground/90">{comment.content}</p>
+                </div>
+              ))
             )}
+          </div>
 
-            {/* Comment Form */}
-            <form
-              onSubmit={handleSubmitComment}
-              className="flex gap-2 pt-3 border-t border-border/60 sticky bottom-0 bg-surface/95 backdrop-blur"
-            >
+          <form onSubmit={handleSubmitComment} className="border-t border-border/60 bg-surface/95 p-4">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="flex-1 px-3 py-2 border border-border/70 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent bg-surface text-sm"
+                placeholder="Write a comment..."
+                className="flex-1 rounded-xl border border-border/70 bg-surface px-3 py-2.5 text-sm focus:border-transparent focus:ring-2 focus:ring-brand"
                 disabled={submittingComment}
               />
               <button
                 type="submit"
                 disabled={!newComment.trim() || submittingComment}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-400 to-sky-400 text-slate-950 rounded-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-xs font-medium"
+                className="rounded-xl bg-gradient-to-r from-emerald-400 to-sky-400 px-4 py-2.5 text-xs font-semibold tracking-wide text-slate-950 shadow-sm hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submittingComment ? 'Posting...' : 'Post'}
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-      </div>
-    </div>
+      </article>
+    </section>
   )
 }
