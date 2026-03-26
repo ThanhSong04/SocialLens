@@ -14,7 +14,6 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
 
   useEffect(() => {
     if (!account) {
-      setBlobs([]);
       return;
     }
     const getBlobs = async (): Promise<BlobMetadata[]> => {
@@ -24,9 +23,8 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
       return blobs;
     };
 
-    getBlobs().then((blobs) => {
+    void getBlobs().then((blobs) => {
       setBlobs(blobs);
-      refreshTrigger;
     });
   }, [account, refreshTrigger]);
 
