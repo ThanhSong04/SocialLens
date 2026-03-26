@@ -5,7 +5,6 @@ import { useState, useRef } from 'react'
 import { encodeFile } from '@/utils/encodeFile'
 import { useSubmitFileToChain } from '@/hooks/useSubmitFileToChain'
 import { useUploadFile } from '@/hooks/useUploadFile'
-import { getShelbyClient } from '@/utils/client'
 
 interface MediaUploadProps {
   onUploadSuccess?: (data: { fileId: string; fileUrl: string; fileType: 'image' | 'video' }) => void
@@ -103,7 +102,7 @@ export default function MediaUpload({ onUploadSuccess, onUploadError }: MediaUpl
       setUploadStage('Getting file URL...')
       setUploadProgress(80)
       const shelbyApiUrl = process.env.NEXT_PUBLIC_SHELBY_API_URL || 'https://api.shelbynet.shelby.xyz'
-      const fileUrl = `${shelbyApiUrl}/v1/blobs/${account.address.toString()}/${uniqueBlobName}`
+      const fileUrl = `${shelbyApiUrl}/shelby/v1/blobs/${account.address.toString()}/${encodeURIComponent(uniqueBlobName)}`
       const fileId = `${account.address.toString()}/${uniqueBlobName}`
 
       // Step 5: Save metadata to Supabase

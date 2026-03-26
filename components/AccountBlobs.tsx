@@ -69,9 +69,9 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
                   <Image
                     src={`${
                       process.env.NEXT_PUBLIC_SHELBY_API_URL || "https://api.shelbynet.shelby.xyz"
-                    }/v1/blobs/${blob.owner.toString()}/${extractFileName(
+                    }/shelby/v1/blobs/${blob.owner.toString()}/${encodeURIComponent(extractFileName(
                       blob.name,
-                    )}`}
+                    ))}`}
                     alt={blob.name}
                     style={{
                       width: "100%",
@@ -124,9 +124,9 @@ export const AccountBlobs = ({ refreshTrigger }: AccountBlobsProps) => {
                   <a
                     href={`${
                       process.env.NEXT_PUBLIC_SHELBY_API_URL || "https://api.shelbynet.shelby.xyz"
-                    }/v1/blobs/${blob.owner.toString()}/${extractFileName(
+                    }/shelby/v1/blobs/${blob.owner.toString()}/${encodeURIComponent(extractFileName(
                       blob.name,
-                    )}`}
+                    ))}`}
                     className="block text-brand-strong hover:underline text-xs mt-1 break-all"
                     target="_blank"
                     rel="noopener noreferrer"
